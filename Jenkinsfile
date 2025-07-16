@@ -28,8 +28,9 @@ pipeline {
                 if ! terraform -version > /dev/null 2>&1; then
                   echo "Terraform not found, installing..."
                   curl -fsSL https://releases.hashicorp.com/terraform/1.8.0/terraform_1.8.0_linux_amd64.zip -o terraform.zip
-                  unzip terraform.zip
-                  sudo mv terraform /usr/local/bin/
+                  unzip -o  terraform.zip
+                  sudo mv -f terraform /usr/local/bin/
+                  sudo rm -f terraform.zip
                 else
                   echo "Terraform already installed."
                 fi
