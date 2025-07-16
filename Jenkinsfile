@@ -2,7 +2,11 @@ pipeline {
     agent any
 
     parameters {
-        choice(name: 'ACTION_TYPE', choices: ['apply', 'destroy'], description: 'Choose whether to apply or destroy infrastructure')
+        choice(
+            name: 'ACTION_TYPE',
+            choices: ['apply', 'destroy'],
+            description: 'Choose whether to apply or destroy the infrastructure'
+        )
     }
 
     environment {
