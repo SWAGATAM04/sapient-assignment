@@ -5,7 +5,7 @@ pipeline {
         TF_VAR_key_name = 'zantac-key'
         AWS_DEFAULT_REGION = 'us-west-1'
         TF_IN_AUTOMATION = 'true'
-        GIT_REPO_URL = 'https://github.com/your-org/zantac-terraform'
+        GIT_REPO_URL = 'https://github.com/SWAGATAM04/sapient-assignment.git'
     }
 
     options {
@@ -38,35 +38,50 @@ pipeline {
             }
         }
 
-        stage('Terraform Init') {
+        stage('Terraform Init/Validate/Plan') {
             steps {
-                dir('terraform-code') {
-                    sh 'terraform init'
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    dir('terraform-code') {
+                        sh '''
+                        export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                        export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                        export AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
+
+                        terraform init
+                        terraform validate
+                        terraform plan -out=tfplan
+                        '''
+                    }
                 }
             }
         }
 
-        stage('Terraform Validate') {
+        stage('User Approval for Apply') {
             steps {
-                dir('terraform-code') {
-                    sh 'terraform validate'
-                }
-            }
-        }
-
-        stage('Terraform Plan') {
-            steps {
-                dir('terraform-code') {
-                    sh 'terraform plan -out=tfplan'
+                script {
+                    input message: 'Approve Terraform Apply?', ok: 'Apply Now'
                 }
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                dir('terraform-code') {
-                    input message: 'Approve Terraform Apply?'
-                    sh 'terraform apply -auto-approve tfplan'
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    dir('terraform-code') {
+                        sh '''
+                        export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                        export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                        export AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
+
+                        terraform apply -auto-approve tfplan
+                        '''
+                    }
                 }
             }
         }
